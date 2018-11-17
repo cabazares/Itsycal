@@ -6,24 +6,28 @@
 #import <Cocoa/Cocoa.h>
 
 // NSUserDefaults key
-extern NSString * const kThemeIndex;
+extern NSString * const kThemePreference;
 
-// Notification names
+// Notification name
 extern NSString * const kThemeDidChangeNotification;
 
 // Convenience macro for notification observer for themable components
 #define REGISTER_FOR_THEME_CHANGE [[NSNotificationCenter defaultCenter] \
-                                    addObserver:self selector:@selector(themeChanged:) \
-                                    name:kThemeDidChangeNotification object:nil]
+                                    addObserverForName:kThemeDidChangeNotification \
+                                    object:nil queue:[NSOperationQueue mainQueue] \
+                                    usingBlock:^(NSNotification *note) { \
+                                        [self themeChanged:nil]; \
+                                    }];
 
-typedef enum : NSUInteger {
-    ThemeLight = 0,
-    ThemeDark  = 1
-} ThemeIndex;
+typedef enum : NSInteger {
+    ThemePreferenceSystem = 0,
+    ThemePreferenceLight = 1,
+    ThemePreferenceDark  = 2
+} ThemePreference;
 
 @interface Themer : NSObject
 
-@property (nonatomic) ThemeIndex themeIndex;
+@property (nonatomic) ThemePreference themePreference;
 
 + (instancetype)shared;
 
@@ -33,7 +37,6 @@ typedef enum : NSUInteger {
 - (NSColor *)DOWTextColor;
 - (NSColor *)highlightedDOWTextColor;
 - (NSColor *)currentMonthOutlineColor;
-- (NSColor *)currentMonthFillColor;
 - (NSColor *)currentMonthTextColor;
 - (NSColor *)noncurrentMonthTextColor;
 - (NSColor *)weekTextColor;

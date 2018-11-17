@@ -8,7 +8,6 @@
 #import "MASShortcut/MASShortcutView.h"
 #import "MASShortcut/MASShortcutView+Bindings.h"
 #import "MoLoginItem/MoLoginItem.h"
-#import "MoTextField.h"
 #import "MoVFLHelper.h"
 #import "EventCenter.h"
 #import "Sparkle/SUUpdater.h"
@@ -33,7 +32,7 @@ static NSString * const kCalendarCellId = @"CalendarCell";
 
 @implementation PrefsGeneralVC
 {
-    MoTextField *_title;
+    NSTextField *_title;
     NSButton *_login;
     NSButton *_checkUpdates;
     NSPopUpButton *_firstDayPopup;
@@ -50,8 +49,8 @@ static NSString * const kCalendarCellId = @"CalendarCell";
     NSView *v = [NSView new];
 
     // Convenience function for making labels.
-    MoTextField* (^label)(NSString*) = ^MoTextField* (NSString *stringValue) {
-        MoTextField *txt = [MoTextField labelWithString:stringValue];
+    NSTextField* (^label)(NSString*) = ^NSTextField* (NSString *stringValue) {
+        NSTextField *txt = [NSTextField labelWithString:stringValue];
         txt.translatesAutoresizingMaskIntoConstraints = NO;
         [v addSubview:txt];
         return txt;
@@ -71,7 +70,7 @@ static NSString * const kCalendarCellId = @"CalendarCell";
     _checkUpdates = chkbx(NSLocalizedString(@"Automatically check for updates", @""));
 
     // First day of week label
-    MoTextField *firstDayLabel = label(NSLocalizedString(@"First day of week:", @""));
+    NSTextField *firstDayLabel = label(NSLocalizedString(@"First day of week:", @""));
 
     // First day of week popup
     _firstDayPopup = [NSPopUpButton new];
@@ -86,7 +85,7 @@ static NSString * const kCalendarCellId = @"CalendarCell";
     [v addSubview:_firstDayPopup];
     
     // Shortcut label
-    MoTextField *shortcutLabel = label(NSLocalizedString(@"Keyboard shortcut", @""));
+    NSTextField *shortcutLabel = label(NSLocalizedString(@"Keyboard shortcut", @""));
     
     // Shortcut view
     MASShortcutView *shortcutView = [MASShortcutView new];
@@ -112,7 +111,7 @@ static NSString * const kCalendarCellId = @"CalendarCell";
     [v addSubview:tvContainer];
     
     // Agenda days label
-    MoTextField *agendaDaysLabel = label(NSLocalizedString(@"Event list shows:", @""));
+    NSTextField *agendaDaysLabel = label(NSLocalizedString(@"Event list shows:", @""));
     
     // Agenda days popup
     _agendaDaysPopup = [NSPopUpButton new];
@@ -124,7 +123,9 @@ static NSString * const kCalendarCellId = @"CalendarCell";
                                      NSLocalizedString(@"4 days", @""),
                                      NSLocalizedString(@"5 days", @""),
                                      NSLocalizedString(@"6 days", @""),
-                                     NSLocalizedString(@"7 days", @""),]];
+                                     NSLocalizedString(@"7 days", @""),
+                                     NSLocalizedString(@"14 days", @""),
+                                     NSLocalizedString(@"31 days", @"")]];
     [v addSubview:_agendaDaysPopup];
 
     MoVFLHelper *vfl = [[MoVFLHelper alloc] initWithSuperview:v metrics:@{@"m": @20} views:NSDictionaryOfVariableBindings(_login, _checkUpdates, firstDayLabel, _firstDayPopup, shortcutLabel, shortcutView, tvContainer, agendaDaysLabel, _agendaDaysPopup)];
@@ -266,11 +267,9 @@ static NSString * const kCalendarCellId = @"CalendarCell";
     self = [super init];
     if (self) {
         self.identifier = kSourceCellId;
-        _textField = [NSTextField new];
+        _textField = [NSTextField labelWithString:@""];
         _textField.translatesAutoresizingMaskIntoConstraints = NO;
         _textField.font = [NSFont boldSystemFontOfSize:12];
-        _textField.editable = NO;
-        _textField.bezeled = NO;
         _textField.stringValue = @"";
         [self addSubview:_textField];
         [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-4-[_textField]-4-|" options:0 metrics:nil views:@{@"_textField": _textField}]];

@@ -37,7 +37,6 @@
 {
     _enableHover = YES;
     _hoverRow    = -1;
-    _hoverColor  = [NSColor colorWithDeviceWhite:0.96 alpha:1];
     
     // Notify when enclosing scrollView scrolls.
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(scrollViewScrolled:) name:NSViewBoundsDidChangeNotification object:[[self enclosingScrollView] contentView]];
@@ -51,24 +50,6 @@
 
 #pragma mark -
 #pragma mark Instance methods
-
-- (void)drawBackgroundInClipRect:(NSRect)clipRect
-{
-    [super drawBackgroundInClipRect:clipRect];
-    
-    [self enumerateAvailableRowViewsUsingBlock:^(NSTableRowView *rowView, NSInteger row) {
-        BOOL isGroupRow = NO;
-        if ([self.delegate respondsToSelector:@selector(tableView:isGroupRow:)]) {
-            isGroupRow = [self.delegate tableView:self isGroupRow:row];
-        }
-        if (row == self.hoverRow && isGroupRow == NO) {
-            rowView.backgroundColor = [NSColor clearColor];
-            [self.hoverColor set];
-            NSRect rect = NSInsetRect([self rectOfRow:row], 2, 1);
-            [[NSBezierPath bezierPathWithRoundedRect:rect xRadius:5 yRadius:5] fill];
-        }
-    }];
-}
 
 - (void)reloadData
 {
@@ -87,6 +68,10 @@
         [self evaluateForHighlight];
     }
 }
+
+// Prevent context menu highlight from drawing.
+// stackoverflow.com/a/30594427/111418
+- (void)drawContextMenuHighlightForRow:(NSInteger)row {}
 
 #pragma mark -
 #pragma mark NSTrackingArea

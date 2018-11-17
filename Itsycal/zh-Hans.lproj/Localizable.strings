@@ -1,4 +1,4 @@
-﻿/* No comment provided by engineer. */
+/* No comment provided by engineer. */
 "1 day" = "1 天";
 
 /* No comment provided by engineer. */
@@ -38,10 +38,19 @@
 "10 minutes before" = "10 分钟前";
 
 /* No comment provided by engineer. */
+"14 days" = "14 天";
+
+/* No comment provided by engineer. */
 "15 minutes before" = "15 分钟前";
 
 /* No comment provided by engineer. */
 "30 minutes before" = "30 分钟前";
+
+/* No comment provided by engineer. */
+"31 days" = "31 天";
+
+/* No comment provided by engineer. */
+"About Itsycal" = "关于 Itsycal";
 
 /* About prefs tab label */
 "About" = "关于";
@@ -62,7 +71,7 @@
 "Are you sure you want to delete this event?" = "你确定要删除此事件吗？";
 
 /* No comment provided by engineer. */
-"At time of event" = "Bei Ereignisstart";
+"At time of event" = "在事件开始时";
 
 /* No comment provided by engineer. */
 "Automatically check for updates" = "自动检查更新";
@@ -72,7 +81,7 @@
 
 Itsycal is more useful when it can display events from your calendars. You can change this setting in System Preferences › Security & Privacy › Privacy" = "日历访问被拒绝。
 
-当 Itsycal 可以显示你的日历事件时会更好用。你可以更改系统偏好设置>安全>隐私此设置。";
+当 Itsycal 可以显示你的日历事件时会更好用。你可以在 “系统偏好设置>安全隐私>隐私” 中更改此设置。";
 
 /* No comment provided by engineer. */
 "Calendar access was denied." = "日历访问被拒绝。";
@@ -83,11 +92,17 @@ Itsycal is more useful when it can display events from your calendars. You can c
 /* No comment provided by engineer. */
 "Check for Updates..." = "检查更新…";
 
+/* No comment provided by engineer. */
+"Copy" = "复制";
+
 /* Dark theme name */
 "Dark" = "深色";
 
 /* No comment provided by engineer. */
 "Datetime pattern" = "日期时间模式";
+
+/* No comment provided by engineer. */
+"Delete" = "删除";
 
 /* No comment provided by engineer. */
 "Delete All Future Events" = "删除所有未来事件";
@@ -111,7 +126,16 @@ Itsycal is more useful when it can display events from your calendars. You can c
 "Event list shows:" = "显示事件列表：";
 
 /* No comment provided by engineer. */
-"Every 2 Weeks" = "每 2 周";
+"Every %zd Days" = "每 %zd 天";
+
+/* No comment provided by engineer. */
+"Every %zd Months" = "每 %zd 月";
+
+/* No comment provided by engineer. */
+"Every %zd Weeks" = "每 %zd 周";
+
+/* No comment provided by engineer. */
+"Every %zd Years" = "每 %zd 年";
 
 /* No comment provided by engineer. */
 "Every Day" = "每天";
@@ -232,6 +256,9 @@ Please quit Itsycal, move it to the Applications folder, and relaunch." = "必�
 /* No comment provided by engineer. */
 "Sunday" = "星期天";
 
+/* System theme name */
+"System" = "系统";
+
 /* Alert box message when we fail to launch the Calendar application */
 "The Calendar application could not be found." = "找不到日历应用程序。";
 
@@ -246,6 +273,9 @@ Please quit Itsycal, move it to the Applications folder, and relaunch." = "必�
 
 /* No comment provided by engineer. */
 "Tuesday" = "星期二";
+
+/* No comment provided by engineer. */
+"Use larger text" = "使用更大的字号";
 
 /* No comment provided by engineer. */
 "Use outline icon" = "使用轮廓图标";

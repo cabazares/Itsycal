@@ -36,6 +36,7 @@
     NSString  *_clockFormat;
     BOOL       _clockUsesSeconds;
     BOOL       _clockUsesTime;
+    NSRect     _screenFrame;
 }
 
 - (void)dealloc
@@ -68,7 +69,6 @@
     // Convenience function to config buttons.
     MoButton* (^btn)(NSString*, NSString*, NSString*, SEL) = ^MoButton* (NSString *imageName, NSString *tip, NSString *key, SEL action) {
         MoButton *btn = [MoButton new];
-        [btn setButtonType:NSMomentaryChangeButton];
         [btn setTarget:self];
         [btn setAction:action];
         [btn setToolTip:tip];
@@ -86,11 +86,12 @@
     _btnPin = btn(@"btnPin", NSLocalizedString(@"Pin Itsycal... P", @""), @"p", @selector(pin:));
     _btnPin.keyEquivalentModifierMask = 0;
     _btnPin.alternateImage = [NSImage imageNamed:@"btnPinAlt"];
-    [_btnPin setButtonType:NSToggleButton];
+    [_btnPin setButtonType:NSButtonTypeToggle];
     
     // Agenda
     _agendaVC = [AgendaViewController new];
     _agendaVC.delegate = self;
+    _agendaVC.identifier = @"AgendaVC";
     NSView *agenda = _agendaVC.view;
     [v addSubview:agenda];
 
@@ -172,13 +173,6 @@
     [self.itsycalWindow makeFirstResponder:_moCal];
 }
 
-- (void)viewDidAppear
-{
-    [super viewDidAppear];
-
-    [self positionItsycalWindow];
-}
-
 #pragma mark -
 #pragma mark Keyboard & button actions
 
@@ -209,7 +203,7 @@
 {
     // Was prefs window open in the past and then hidden when
     // app became inactive? This prevents it from reappearing.
-    [_prefsWC close];
+    [self.prefsWC close];
     
     [[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
     
@@ -297,9 +291,10 @@
     NSMenu *optMenu = [[NSMenu alloc] initWithTitle:@"Options Menu"];
     NSInteger i = 0;
 
-    [optMenu insertItemWithTitle:NSLocalizedString(@"Preferences...", @"") action:@selector(showPrefs:) keyEquivalent:@"," atIndex:i++];
-    [optMenu insertItem:[NSMenuItem separatorItem] atIndex:i++];
+    [optMenu insertItemWithTitle:NSLocalizedString(@"About Itsycal", @"") action:@selector(showAbout:) keyEquivalent:@"" atIndex:i++];
     [optMenu insertItemWithTitle:NSLocalizedString(@"Check for Updates...", @"") action:@selector(checkForUpdates:) keyEquivalent:@"" atIndex:i++];
+    [optMenu insertItem:[NSMenuItem separatorItem] atIndex:i++];
+    [optMenu insertItemWithTitle:NSLocalizedString(@"Preferences...", @"") action:@selector(showPrefs:) keyEquivalent:@"," atIndex:i++];
     [optMenu insertItem:[NSMenuItem separatorItem] atIndex:i++];
     [optMenu insertItemWithTitle:NSLocalizedString(@"Quit Itsycal", @"") action:@selector(terminate:) keyEquivalent:@"q" atIndex:i++];
     NSPoint pt = NSOffsetRect(_btnOpt.frame, -5, -10).origin;
@@ -312,10 +307,8 @@
     [[NSUserDefaults standardUserDefaults] setBool:pin forKey:kPinItsycal];
 }
 
-- (void)showPrefs:(id)sender
+- (NSWindowController *)prefsWC
 {
-    [[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
-    
     if (!_prefsWC) {
         // VCs for each tab in prefs panel.
         PrefsGeneralVC *prefsGeneralVC = [PrefsGeneralVC new];
@@ -335,7 +328,26 @@
         _prefsWC.window.contentView.wantsLayer = YES;
         [_prefsWC.window center];
     }
-    [_prefsWC showWindow:self];
+    return _prefsWC;
+}
+
+- (PrefsVC *)prefsVC
+{
+    return (PrefsVC *)self.prefsWC.contentViewController;
+}
+
+- (void)showAbout:(id)sender
+{
+    [[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
+    [self.prefsVC showAbout];
+    [self.prefsWC showWindow:self];
+}
+
+- (void)showPrefs:(id)sender
+{
+    [[NSApplication sharedApplication] activateIgnoringOtherApps:YES];
+    [self.prefsVC showPrefs];
+    [self.prefsWC showWindow:self];
 }
 
 - (void)checkForUpdates:(id)sender
@@ -554,6 +566,7 @@
             break;
         }
     }
+    _screenFrame = statusItemScreen.frame;
     CGFloat screenMaxX = NSMaxX(statusItemScreen.frame);
 
     // Constrain the menu item's frame to be no higher than the top
@@ -563,6 +576,9 @@
     // shown clipped at the top. Prevent that by constraining the
     // top of the menu item to be at most the top of the screen.
     statusItemFrame.origin.y = MIN(statusItemFrame.origin.y, NSMaxY(statusItemScreen.frame));
+    
+    // So that agenda height can adjust to fit screen if needed.
+    [_agendaVC.view setNeedsLayout:YES];
 
     [self.itsycalWindow positionRelativeToRect:statusItemFrame screenMaxX:screenMaxX];
 }
@@ -743,6 +759,11 @@
     }
 }
 
+- (CGFloat)agendaMaxPossibleHeight
+{
+    return NSHeight(_screenFrame) - NSHeight(_moCal.frame) - 140;
+}
+
 #pragma mark -
 #pragma mark MoCalendarDelegate
 
@@ -789,10 +810,12 @@
 - (void)updateAgenda
 {
     NSInteger days = [[NSUserDefaults standardUserDefaults] integerForKey:kShowEventDays];
-    days = MIN(MAX(days, 0), 7); // days is in range 0..7
+    days = MIN(MAX(days, 0), 9); // days is in range 0..9
+    // days == 8 really means 14; 9 really means 31
+    if (days == 8) days = 14; else if (days == 9) days = 31;
     _agendaVC.events = [_ec datesAndEventsForDate:_moCal.selectedDate days:days];
     [_agendaVC reloadData];
-    _bottomMargin.constant = _agendaVC.events.count == 0 ? 26 : 30;
+    _bottomMargin.constant = _agendaVC.events.count == 0 ? 25 : 30;
 }
 
 - (void)updatePastEventsTimer

@@ -11,8 +11,10 @@
 #import "ItsycalWindow.h"
 #import "ViewController.h"
 #import "Themer.h"
+#import "Sizer.h"
 #import "MASShortcut/MASShortcutBinder.h"
 #import "MASShortcut/MASShortcutMonitor.h"
+#import "MoUtils.h"
 
 @implementation AppDelegate
 {
@@ -21,6 +23,9 @@
 
 + (void)initialize
 {
+    // defaultThemePref is 0 (System) for macOS 10.14+, else 1 (Light).
+    NSInteger defaultThemePref = OSVersionIsAtLeast(10, 14, 0) ? 0 : 1;
+
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     [defaults registerDefaults:@{
         kPinItsycal:           @(NO),
@@ -32,12 +37,19 @@
         kShowDayOfWeekInIcon:  @(NO),
         kShowEventDots:        @(YES),
         kShowMonthOutline:     @(YES),
+        kThemePreference:      @(defaultThemePref),
         kHideIcon:             @(NO)
     }];
     
-    // Constrain kShowEventDays to values 0...7 in (unlikely) case it is invalid.
-    NSInteger validDays = MIN(MAX([defaults integerForKey:kShowEventDays], 0), 7);
+    // Constrain kShowEventDays to values 0...9 in (unlikely) case it is invalid.
+    NSInteger validDays = MIN(MAX([defaults integerForKey:kShowEventDays], 0), 9);
     [defaults setInteger:validDays forKey:kShowEventDays];
+    
+    // Set kThemePreference to defaultThemePref in the unlikely case it's invalid.
+    NSInteger themePref = [defaults integerForKey:kThemePreference];
+    if (themePref < defaultThemePref || themePref > 2) {
+        [defaults setInteger:defaultThemePref forKey:kThemePreference];
+    }
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
@@ -52,18 +64,33 @@
 
     // 0.11.1 introduced a new way to highlight columns in the calendar.
     [self weekendHighlightFixup];
+    
+    // 0.11.11 uses a new theme preference scheme that enables following
+    // the system's appearance.
+    [self themeFixup];
 
     // Register keyboard shortcut.
     [[MASShortcutBinder sharedBinder] bindShortcutWithDefaultsKey:kKeyboardShortcut toAction:^{
          [(ViewController *)_wc.contentViewController keyboardShortcutActivated];
      }];
-    
-    [[Themer shared] bind:@"themeIndex" toObject:[NSUserDefaultsController sharedUserDefaultsController] withKeyPath:[@"values." stringByAppendingString:kThemeIndex] options:@{NSContinuouslyUpdatesValueBindingOption: @(YES)}];
+
+    // This call instantiates the Sizer shared object and then
+    // establishes the binding to NSUserDefaultsController. This call
+    // must be made BEFORE the window is created because sizes are
+    // used when initializing views.
+    [[Sizer shared] bind:@"sizePreference" toObject:[NSUserDefaultsController sharedUserDefaultsController] withKeyPath:[@"values." stringByAppendingString:kSizePreference] options:@{NSContinuouslyUpdatesValueBindingOption: @(YES)}];
 
     ViewController *vc = [ViewController new];
     _wc = [[NSWindowController alloc] initWithWindow:[ItsycalWindow  new]];
     _wc.contentViewController = vc;
     _wc.window.delegate = vc;
+    
+    // This call instantiates the Themer shared object and then
+    // establishes the binding to NSUserDefaultsController. On macOS
+    // 10.14+, it is crucial for this call to be made AFTER the window
+    // is created because Themer instantiation relies on checking a
+    // property on the window to determine its appearance.
+    [[Themer shared] bind:@"themePreference" toObject:[NSUserDefaultsController sharedUserDefaultsController] withKeyPath:[@"values." stringByAppendingString:kThemePreference] options:@{NSContinuouslyUpdatesValueBindingOption: @(YES)}];
 }
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification
@@ -138,6 +165,14 @@
     [defaults removeObjectForKey:@"HighlightWeekend"];
     [defaults removeObjectForKey:@"WeekendIsFridaySaturday"];
     [defaults removeObjectForKey:@"WeekendIsSaturdaySunday"];
+}
+
+// Itsycal 0.11.11 uses ThemePreference instead of ThemeIndex to
+// express the user's theme preference. ThemePreference can be
+// System in addition to explicitly Light or Dark.
+- (void)themeFixup
+{
+    [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"ThemeIndex"];
 }
 
 @end

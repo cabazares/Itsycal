@@ -156,9 +156,10 @@ static CGFloat kToolipWindowWidth = 200;
     NSRect r = NSInsetRect(self.bounds, 1, 1);
     NSBezierPath *p = [NSBezierPath bezierPathWithRoundedRect:r xRadius:4 yRadius:4];
     [[[Themer shared] windowBorderColor] setStroke];
+    [p setLineWidth:2];
+    [p stroke];
     [[[Themer shared] tooltipBackgroundColor] setFill];
-    [p setLineWidth: 2];
-    [p stroke];[p fill];
+    [p fill];
 }
 
 @end
