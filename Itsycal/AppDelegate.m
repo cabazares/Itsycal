@@ -36,6 +36,7 @@
         kShowMonthInIcon:      @(NO),
         kShowDayOfWeekInIcon:  @(NO),
         kShowEventDots:        @(YES),
+        kShowMonthOutline:     @(YES),
         kThemePreference:      @(defaultThemePref),
         kHideIcon:             @(NO)
     }];

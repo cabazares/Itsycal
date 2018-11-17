@@ -221,6 +221,12 @@ NSString * const kMoCalendarNumRows = @"MoCalendarNumRows";
     [self updateCalendar];
 }
 
+- (void)setShowMonthOutline:(BOOL)showMonthOutline
+{
+    _showMonthOutline = showMonthOutline;
+    [self setNeedsDisplay:true];
+}
+
 - (void)setHighlightedDOWs:(DOWMask)highlightedDOWs
 {
     _highlightedDOWs = highlightedDOWs;
@@ -766,9 +772,11 @@ NSString * const kMoCalendarNumRows = @"MoCalendarNumRows";
 
     NSBezierPath *outlinePath = [self bezierPathWithStartCell:_monthStartCell endCell:_monthEndCell radius:6 inset:0 useRects:NO];
     
-    [[[Themer shared] currentMonthOutlineColor] set];
-    [outlinePath setLineWidth:2];
-    [outlinePath stroke];
+    if (_showMonthOutline) {
+        [[[Themer shared] currentMonthOutlineColor] set];
+        [outlinePath setLineWidth:2];
+        [outlinePath stroke];
+    }
     
     CGFloat sz = [[Sizer shared] cellSize];
     if (self.highlightedDOWs) {
