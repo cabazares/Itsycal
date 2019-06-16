@@ -211,7 +211,7 @@ NSString * const kMoCalendarNumRows = @"MoCalendarNumRows";
     CGFloat constant = showWeeks ? NSWidth(_weekGrid.frame) : 2;
     [NSAnimationContext runAnimationGroup:^(NSAnimationContext *ctx) {
         [ctx setDuration:0.1];
-        [_weeksConstraint.animator setConstant:constant];
+        [self->_weeksConstraint.animator setConstant:constant];
     } completionHandler:NULL];
 }
 
@@ -544,6 +544,17 @@ NSString * const kMoCalendarNumRows = @"MoCalendarNumRows";
 
 - (void)mouseMoved:(NSEvent *)theEvent
 {
+    if (!self.window.isVisible) {
+        // On macOS 10.14, -mouseMoved: can be called even when the
+        // calendar (and its window) are *not visible* under certain
+        // circumstances. This leads to tooltips mysteriously popping
+        // up out of nowhere when the user's mouse is where Itsycal's
+        // window *would be* if it were actually showing. By updating
+        // the tracking areas, -mouseMoved: is no longer erroneously
+        // called.
+        [self updateTrackingAreas];
+        return;
+    }
     NSPoint locationInWindow = [theEvent locationInWindow];
     NSPoint locationInDates  = [_dateGrid convertPoint:locationInWindow fromView:nil];
     MoCalCell *hoveredCell   = [_dateGrid cellAtPoint:locationInDates];
@@ -692,7 +703,8 @@ NSString * const kMoCalendarNumRows = @"MoCalendarNumRows";
     
     BOOL didChangeMonth = NO;
     
-    monthDate.day = 1;
+    monthDate = MakeDate(monthDate.year, monthDate.month, 1);
+    
     if (CompareDates(monthDate, self.monthDate) != 0) {
         _monthDate = monthDate;
         [self updateCalendar];

@@ -1,36 +1,47 @@
 #!/bin/sh
 
-# This script builds Itsycal for distribution.
-# It first builds the app and then creates two
-# ZIP files and a Sparkle appcast XML file which
-# it places on the Desktop. Those files can then
-# all be uploaded to the web.
+# If Itsycal.app is not found on the Desktop, quit.
+APP_PATH="$HOME/Desktop/Itsycal.app"
+if [ ! -d "$APP_PATH" ]
+then
+    echo "\n"
+    echo "  + \033[0;31mNOT FOUND:\033[0m $APP_PATH"
+    echo "  + Export notarized Itsycal.app to Desktop."
+    echo "  + See BUILD.md for instructions."
+    echo "\n"
+    exit 1
+fi
 
 # Get the bundle version from the plist.
-PLIST_FILE="Itsycal/Info.plist"
+PLIST_FILE="$APP_PATH/Contents/Info.plist"
 VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" $PLIST_FILE)
 SHORT_VERSION_STRING=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" $PLIST_FILE)
 
 # Set up file names and paths.
-# The short version string might have spaces,
-# so replace those with -.
-BUILD_PATH=$(mktemp -d "$TMPDIR/Itsycal.XXXXXX")
 ZIP_NAME="Itsycal-$SHORT_VERSION_STRING.zip"
 ZIP_NAME=${ZIP_NAME// /-}
-ZIP_PATH1="$HOME/Desktop/$ZIP_NAME"
-ZIP_PATH2="$HOME/Desktop/Itsycal.zip"
-XML_PATH="$HOME/Desktop/itsycal.xml"
+DEST_DIR="$HOME/Desktop/Itsycal-$SHORT_VERSION_STRING"
+XML_PATH="$DEST_DIR/itsycal.xml"
+ZIP_PATH1="$DEST_DIR/$ZIP_NAME"
+ZIP_PATH2="$DEST_DIR/Itsycal.zip"
 
-# Build Itsycal in a temporary build location.
-xcodebuild -scheme Itsycal -configuration Release -derivedDataPath "$BUILD_PATH" build
+# Run some diagnostics so we can see all is ok."
+echo ""
+( set -x; spctl -vvv --assess --type exec $APP_PATH )
+echo ""
+( set -x; codesign -vvv --deep --strict $APP_PATH )
+echo ""
+( set -x; codesign -dvv $APP_PATH )
 
-# Go into the temporary build directory.
-cd "$BUILD_PATH/Build/Products/Release"
+echo ""
+echo "Making zips and appcast for \033[0;32m$SHORT_VERSION_STRING ($VERSION)\033[0m..."
 
-# Compress the app.
-rm -f "$ZIP_PATH1"
-rm -f "$ZIP_PATH2"
-zip -r -y "$ZIP_PATH1" Itsycal.app
+# Make output dir (if necessary) and clear its contents.
+rm -frd "$DEST_DIR"
+mkdir -p "$DEST_DIR"
+
+# Compress Itsycal.app and make a copy without version suffix.
+ditto -c -k --rsrc --keepParent "$APP_PATH" "$ZIP_PATH1"
 cp "$ZIP_PATH1" "$ZIP_PATH2"
 
 # Get the date and zip file size for the Sparkle XML.
@@ -64,4 +75,9 @@ cat > "$XML_PATH" <<EOF
 </channel>
 </rss>
 EOF
+
+echo "Done!"
+echo ""
+
+open -R "$DEST_DIR/itsycal.xml"
 

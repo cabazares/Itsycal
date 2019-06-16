@@ -242,10 +242,10 @@ static NSString *kEventCellIdentifier = @"EventCell";
     
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        _popover = [NSPopover new];
-        _popover.contentViewController = [AgendaPopoverVC new];
-        _popover.behavior = NSPopoverBehaviorTransient;
-        _popover.animates = NO;
+        self->_popover = [NSPopover new];
+        self->_popover.contentViewController = [AgendaPopoverVC new];
+        self->_popover.behavior = NSPopoverBehaviorTransient;
+        self->_popover.animates = NO;
     });
     
     AgendaEventCell *cell = [_tv viewAtColumn:0 row:_tv.clickedRow makeIfNecessary:NO];
@@ -334,7 +334,7 @@ static NSString *kEventCellIdentifier = @"EventCell";
     dispatch_once(&onceToken, ^{
         eventCell = [AgendaEventCell new];
         dateCell = [AgendaDateCell new];
-        dateCell.frame = NSMakeRect(0, 0, NSWidth(_tv.frame), 999); // only width is important here
+        dateCell.frame = NSMakeRect(0, 0, NSWidth(self->_tv.frame), 999); // only width is important here
         dateCell.dayTextField.integerValue = 21;
     });
     
@@ -616,7 +616,7 @@ static NSString *kEventCellIdentifier = @"EventCell";
 - (instancetype)init
 {
     // Convenience function for making labels.
-    NSTextField* (^label)() = ^NSTextField* () {
+    NSTextField* (^label)(void) = ^NSTextField* () {
         NSTextField *lbl = [NSTextField labelWithString:@""];
         lbl.font = [NSFont systemFontOfSize:[[Sizer shared] fontSize]];
         lbl.lineBreakMode = NSLineBreakByWordWrapping;
@@ -886,10 +886,10 @@ static NSString *kEventCellIdentifier = @"EventCell";
             [_textGrid rowAtIndex:4].hidden = YES;
         }
         else {
-            NSMutableAttributedString *notes = [[NSMutableAttributedString alloc] initWithString:trimmedNotes];
+            NSMutableAttributedString *notes = [self notesWithHTML:trimmedNotes];
             [notes addAttribute:NSFontAttributeName value:[NSFont systemFontOfSize:[[Sizer shared] fontSize]] range:NSMakeRange(0, notes.length)];
             [notes addAttribute:NSForegroundColorAttributeName value:[[Themer shared] agendaEventTextColor] range:NSMakeRange(0, notes.length)];
-            [_linkDetector enumerateMatchesInString:trimmedNotes options:kNilOptions range:NSMakeRange(0, trimmedNotes.length) usingBlock:^(NSTextCheckingResult *result, NSMatchingFlags flags, BOOL *stop) {
+            [_linkDetector enumerateMatchesInString:notes.string options:kNilOptions range:NSMakeRange(0, notes.length) usingBlock:^(NSTextCheckingResult *result, NSMatchingFlags flags, BOOL *stop) {
                 [notes addAttribute:NSLinkAttributeName value:result.URL.absoluteString range:result.range];
             }];
             _note.textStorage.attributedString = notes;
@@ -929,6 +929,12 @@ static NSString *kEventCellIdentifier = @"EventCell";
     // 16 = 8 + 8 = top + bottom margins
     NSSize gridSize = _grid.fittingSize;
     return NSMakeSize(gridSize.width + 20, gridSize.height + 16);
+}
+
+- (NSMutableAttributedString *)notesWithHTML:(NSString *)html
+{
+    NSData *htmlData = [html dataUsingEncoding:NSUTF8StringEncoding];
+    return [[NSMutableAttributedString alloc] initWithHTML:htmlData documentAttributes:nil];
 }
 
 @end

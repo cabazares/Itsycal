@@ -183,6 +183,7 @@
     NSUInteger flags = [theEvent modifierFlags];
     BOOL noFlags = !(flags & (NSEventModifierFlagCommand | NSEventModifierFlagShift | NSEventModifierFlagOption | NSEventModifierFlagControl));
     BOOL cmdFlag = (flags & NSEventModifierFlagCommand) &&  !(flags & (NSEventModifierFlagShift | NSEventModifierFlagOption | NSEventModifierFlagControl));
+    BOOL cmdOptFlag = (flags & NSEventModifierFlagCommand) && (flags & NSEventModifierFlagOption) &&  !(flags & (NSEventModifierFlagShift | NSEventModifierFlagControl));
     unichar keyChar = [charsIgnoringModifiers characterAtIndex:0];
     
     if (keyChar == 'w' && noFlags) {
@@ -193,6 +194,9 @@
     }
     else if (keyChar == ',' && cmdFlag) {
         [self showPrefs:self];
+    }
+    else if (keyChar == 'r' && cmdOptFlag) {
+        [self resetEventCenter];
     }
     else {
         [super keyDown:theEvent];
@@ -353,6 +357,19 @@
 - (void)checkForUpdates:(id)sender
 {
     [[SUUpdater sharedUpdater] checkForUpdates:self];
+}
+
+- (void)resetEventCenter
+{
+    // This is an emergency move for when Itsycal loses
+    // calendars or events. It is akin to rebooting the
+    // computer when you don't know the real fix. :P
+    [_prefsWC close];
+    _prefsWC = nil;
+    _ec = nil;
+    [self eventCenterEventsChanged];
+    _ec = [[EventCenter alloc] initWithCalendar:_nsCal delegate:self];
+    ((TooltipViewController *)_moCal.tooltipVC).ec = _ec;
 }
 
 #pragma mark -
@@ -796,12 +813,12 @@
 
 - (MoDate)fetchStartDate
 {
-    return AddDaysToDate(-40, _moCal.monthDate);
+    return AddDaysToDate(-8, _moCal.monthDate);
 }
 
 - (MoDate)fetchEndDate
 {
-    return AddDaysToDate(80, _moCal.monthDate);
+    return AddDaysToDate(72, _moCal.monthDate);
 }
 
 #pragma mark -
@@ -970,15 +987,15 @@
     // Day changed notification
     [[NSNotificationCenter defaultCenter] addObserverForName:NSCalendarDayChangedNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
         MoDate today = [self todayDate];
-        _moCal.todayDate = today;
-        _moCal.selectedDate = today;
+        self->_moCal.todayDate = today;
+        self->_moCal.selectedDate = today;
         [self updateMenubarIcon];
     }];
     
     // Timezone changed notification
     [[NSNotificationCenter defaultCenter] addObserverForName:NSSystemTimeZoneDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
         [self updateMenubarIcon];
-        [_ec refetchAll];
+        [self->_ec refetchAll];
     }];
     
     // Locale notifications
@@ -989,7 +1006,7 @@
     // System clock notification
     [[NSNotificationCenter defaultCenter] addObserverForName:NSSystemClockDidChangeNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
         [self updateMenubarIcon];
-        [_ec refetchAll];
+        [self->_ec refetchAll];
     }];
 
     // Wake from sleep notification
