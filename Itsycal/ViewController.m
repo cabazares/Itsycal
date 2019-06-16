@@ -476,8 +476,8 @@
     NSFont *font = [NSFont systemFontOfSize:11.5 weight:NSFontWeightBold];
     CGRect textRect = [[[NSAttributedString alloc] initWithString:text attributes:@{NSFontAttributeName: font}] boundingRectWithSize:CGSizeMake(999, 999) options:0 context:nil];
 
-    // Icon width is at least 23 pts with 3 pt outside margins, 4 pt inside margins.
-    CGFloat width = MAX(3 + 4 + ceilf(NSWidth(textRect)) + 4 + 3, 23);
+    // Icon width is at least 23 pts with 1 pt outside margins, 0 pt inside margins.
+    CGFloat width = 2 + ceilf(NSWidth(textRect)) + 2;
     CGFloat height = 16;
     iconImage = [NSImage imageWithSize:NSMakeSize(width, height) flipped:NO drawingHandler:^BOOL (NSRect rect) {
 
@@ -485,12 +485,6 @@
         CGContextRef const ctx = [[NSGraphicsContext currentContext] graphicsPort];
 
         if (useOutlineIcon) {
-
-            // Draw outlined icon image.
-
-            [[NSColor blackColor] set];
-            [[NSBezierPath bezierPathWithRoundedRect:NSInsetRect(rect, 3.5, 0.5) xRadius:2 yRadius:2] stroke];
-
             // Turning off smoothing looks better (why??).
             CGContextSetShouldSmoothFonts(ctx, false);
 
@@ -531,7 +525,7 @@
             // Draw text.
             NSMutableParagraphStyle *pstyle = [NSMutableParagraphStyle new];
             pstyle.alignment = NSTextAlignmentCenter;
-            [text drawInRect:NSOffsetRect(deviceRect, 0, -1) withAttributes:@{NSFontAttributeName: [NSFont systemFontOfSize:fontSize weight:NSFontWeightBold], NSForegroundColorAttributeName: [NSColor blackColor], NSParagraphStyleAttributeName: pstyle}];
+            [text drawInRect:NSOffsetRect(rect, 0, 1) withAttributes:@{NSFontAttributeName: [NSFont systemFontOfSize:fontSize weight:NSFontWeightSemibold], NSParagraphStyleAttributeName: pstyle, NSForegroundColorAttributeName: [NSColor blackColor]}];
 
             // Switch back to the image's context.
             [NSGraphicsContext restoreGraphicsState];
